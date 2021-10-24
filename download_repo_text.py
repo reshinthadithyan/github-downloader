@@ -12,7 +12,7 @@ from tqdm import tqdm
 import argparse
 import subprocess
 from itertools import repeat
-
+import copy
 bad_extensions = [
     'app',
     'bin',
@@ -164,7 +164,7 @@ def get_content(f):
 
 
 def _process_repo(repo_data, repodir):
-    out = None
+    out = []
     # get metadata
     name, stars, lang = repo_data
     meta = {'repo_name': name, 'stars': stars, 'repo_language': lang}
@@ -192,16 +192,19 @@ def _process_repo(repo_data, repodir):
                     text_outputs.append(None)
             for i in range(len(files)):
                 text = text_outputs[i]
+                meta_ind = copy.deepcopy(meta)
                 if text is not None:
-                    meta['file_name'] = filenames[i]
-                    meta['mime_type'] = extensions[i]
+                    meta_ind['file_name'] = filenames[i]
+                    meta_ind['mime_type'] = extensions[i]
                     if out is None:
-                        out = [[text, meta]]
+                        out = [[text, meta_ind]]
                     else:
-                        out.append([text, meta])
+                        out.append([text,meta_ind])
         shutil.rmtree(repodir, ignore_errors=True)
     except TimeoutError:
         print(f"Processing for {name} timed out")
+    # for o in out:
+    #     print(o[1]["file_name"])
     return out
 
 
@@ -226,7 +229,7 @@ def process_repo_list(repo_data, clone_timeout, processing_timeout):
             p.kill()
         shutil.rmtree(f'{repodir}/.git', ignore_errors=True)
         # extracts text files from repo and returns them as list : [[text, metadata], ... ]
-        out = process_repo(repo_data, repodir, processing_timeout=processing_timeout)
+        out = _process_repo(repo_data, repodir)#, processing_timeout=processing_timeout)
     except Exception:
         err = traceback.format_exc()
         if verbose:
