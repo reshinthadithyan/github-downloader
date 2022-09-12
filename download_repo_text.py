@@ -203,8 +203,6 @@ def _process_repo(repo_data, repodir):
         shutil.rmtree(repodir, ignore_errors=True)
     except TimeoutError:
         print(f"Processing for {name} timed out")
-    # for o in out:
-    #     print(o[1]["file_name"])
     return out
 
 
